@@ -53,11 +53,58 @@ request(url, function (err, response, html) { // Initial request to the URL
                   }
 
                 }); // Ends each loop
-                  for (var s = 0; s < shirtsToScrape.length; s++) { // Loop over the array of Shirts we've found
-                  request(shirtsToScrape[s], function (err, response, html) { // Scrape the final shirts array
-                    if (!err && response.statusCode == 200) {
-                      var $ = cheerio.load(html);
-                      // Grab all shirt data
-                      var title = $("title").text();
-                      var price = $(".price").text();
-                      var img = $(".shirt-picture img").attr("src");
+                    for (var s = 0; s < shirtsToScrape.length; s++) { // Loop over the array of Shirts we've found
+                    request(shirtsToScrape[s], function (err, response, html) { // Scrape the final shirts array
+                      if (!err && response.statusCode == 200) {
+                        var $ = cheerio.load(html);
+                        // Grab all shirt data
+                        var title = $("title").text();
+                        var price = $(".price").text();
+                        var img = $(".shirt-picture img").attr("src");
+
+                        // Create empty JSON object with shirt data
+                        var shirts = {};
+                        shirts.Title = title;
+                        shirts.Price = price;
+
+                        // Log full path URL
+                        shirts.ImageURL = url + img;
+                        shirts.URL = response.request.uri.href;
+
+                        // Create the timestamp
+                        shirts.Time = moment().format("MMMM Do YYYY, h:mm:ss a");
+                        totalShirts.push(shirts); // Push the shirts data to the totalShirts array
+
+                         // If all the shirts have been grabbed, grab the date time
+                        var time = moment().format("YYYY[-]MM[-]DD");
+
+                        // Create the data directory
+                        var dir = "./data";
+                        // If the directory does not exist, create it
+                        if(!fs.existsSync(dir)) {
+                            fs.mkdirSync(dir);
+                        }
+
+                        // Create csv with array of data and csv headers we defined
+                        json2csv({ data: totalShirts, fields: csvHeaders }, function(err, csv) {
+                          fs.writeFile( dir + "/" + time + ".csv", csv, function(err) {
+                            if (err) throw err;
+                            console.log("File saved");
+                          });
+                        });
+                         // End check if all shirts grabbed
+                       } else {
+                        generalErr(err);
+                       }
+                    });
+                  } // End single shirt scrape
+              } else {
+                generalErr(err);
+              }
+          }); // Ends Second request
+        }// Ends Else
+      }// Ends For
+    } else {
+      generalErr(err);
+    }
+  }); // End main page request
