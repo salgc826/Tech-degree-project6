@@ -9,11 +9,12 @@ var fs = require("fs");
 
 
 //function to handle errors
-function generalErr(err) {
-  const genError = new Data() + " There's been an error. " + err.code + " \r\n";
+function generalErr(err){
+  const genError = new Date() + " There's been an error. " + err.code + " \r\n";
   console.log(genError);
   fs.appendFileSync('./scraper-error.log', genError);
 }
+
 
 // Globals
 var url = "http://shirts4mike.com";
